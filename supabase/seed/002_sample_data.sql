@@ -3,14 +3,15 @@
 -- Run this once in the Supabase dashboard (SQL Editor), after the migrations.
 --
 -- The SQL Editor has no logged-in user, so the rows are linked to the account
--- whose email is set below. Every apartment gets the note 'Sample data'.
+-- whose email is set below: replace you@example.com with the email you signed
+-- up with in the app. Every apartment gets the note 'Sample data'.
 --
 -- To remove the sample data later (appliances and meters are deleted with it):
 --   delete from public.apartments where notes = 'Sample data';
 
 do $$
 declare
-  owner_email constant text := 'oummy_as@yahoo.fr';
+  owner_email constant text := 'you@example.com';
   owner_id uuid;
   apt_id uuid;
   r record;

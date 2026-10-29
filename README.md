@@ -1,110 +1,98 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Enya Energy Monitoring
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
-
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+A web app to follow the Linky electricity meters of a set of apartments and spot
+unusual consumption that could indicate fraud.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **Accounts** – sign up, log in, reset password (Supabase Auth). Each user only sees their own data (Row Level Security).
+- **Apartments** – add, edit and delete apartments: owner name, entry date, notes and the appliances in each one
+  (TV, refrigerator, stove, washing machine, computer, iron, electric heating).
+- **Linky meters** – one meter per apartment, with its consumption (kWh) and an active / not active status.
+- **Fraud detection** – an active meter below **100 kWh** is flagged as *suspected fraud*.
+  Suspect meters are listed first, highlighted in red, with counters for meters, active meters and suspected fraud.
+- Light / dark theme.
 
-## Demo
+## Tech stack
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- [Next.js](https://nextjs.org) (App Router, Server Actions) + React 19 + TypeScript
+- [Supabase](https://supabase.com) – PostgreSQL database, Auth, Row Level Security (`@supabase/ssr`)
+- [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) (Radix UI) + [lucide-react](https://lucide.dev) icons
 
-## Deploy to Vercel
+## Getting started
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### 1. Prerequisites
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- [Node.js](https://nodejs.org) 20 or later
+- A free [Supabase](https://supabase.com) account
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### 2. Clone and install
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
-
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
+```bash
+git clone https://github.com/Oummyas/Enya_Energy_Monitoring.git
+cd Enya_Energy_Monitoring
+npm install
 ```
 
-> [!NOTE]
-> This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-> Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-> See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+### 3. Create a Supabase project
 
-Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+Create a new project on the [Supabase dashboard](https://supabase.com/dashboard).
 
-5. You can now run the Next.js local development server:
+### 4. Set the environment variables
 
-   ```bash
-   npm run dev
-   ```
+Copy `.env.example` to `.env.local`:
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+```bash
+cp .env.example .env.local
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+Then fill in the two values from your Supabase project (**Project Settings → API**, or the **Connect** button):
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+| Variable | Where to find it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (or the legacy `anon` key) |
 
-## Feedback and issues
+> Never put the `service_role` / secret key in this file. `.env.local` is git-ignored and must never be committed.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### 5. Run the SQL migrations
 
-## More Supabase examples
+In the Supabase dashboard, open **SQL Editor** and run these files **in this order**
+(copy the content of each file, paste it, click **Run**):
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+1. `supabase/migrations/001_initial_schema.sql` – creates the `apartments`, `apartment_appliances`
+   and `linky_meters` tables and their security policies
+2. `supabase/migrations/003_rename_apartment_number.sql` – renames `apartment_number` to `apartment_name`
+
+Each file must be run only once.
+
+### 6. Start the app
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and create an account.
+
+### 7. (Optional) Load sample data
+
+`supabase/seed/002_sample_data.sql` adds 10 sample apartments with their appliances and meters.
+
+1. Sign up in the app first.
+2. In the file, replace the value of `owner_email` (`you@example.com`) with the email of your account.
+3. Run it in the **SQL Editor** (after the migrations).
+
+To remove the sample data later:
+
+```sql
+delete from public.apartments where notes = 'Sample data';
+```
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Build for production |
+| `npm run start` | Run the production build |
+| `npm run lint` | Run ESLint |
