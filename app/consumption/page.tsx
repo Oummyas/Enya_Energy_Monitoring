@@ -1,9 +1,12 @@
 import { Suspense } from "react";
-import { House, TriangleAlert } from "lucide-react";
+import { House } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FormMessage } from "@/components/form-message";
+import { PirateIcon } from "@/components/pirate-icon";
+import { ThermometerIcon } from "@/components/thermometer-icon";
 import { errorState } from "@/lib/form-state";
 import { isSuspectedFraud } from "@/lib/fraud";
+import { overheatingPercent } from "@/lib/overheating";
 import {
   MONTHLY_SUBSCRIPTION_EUR,
   PRICE_PER_KWH_EUR,
@@ -271,6 +274,7 @@ async function ConsumptionReport() {
             ? ((avg - othersAvg) / othersAvg) * 100
             : null,
         suspect: isSuspectedFraud(m),
+        overheating: overheatingPercent(m, m.readings.at(-2)),
       };
     })
     // Active meters first, biggest consumers at the top
@@ -350,6 +354,8 @@ async function ConsumptionReport() {
                     "border-b last:border-0",
                     !r.is_active && "text-muted-foreground opacity-70",
                     r.suspect && "bg-red-50/80 dark:bg-red-950/30",
+                    r.overheating !== null &&
+                      "bg-orange-50/80 dark:bg-orange-950/30",
                   )}
                 >
                   <td className="py-3 pr-3">
@@ -357,13 +363,21 @@ async function ConsumptionReport() {
                       className={cn(
                         "flex items-center gap-1.5 whitespace-nowrap font-medium",
                         r.suspect && "text-red-700 dark:text-red-400",
+                        r.overheating !== null &&
+                          "text-orange-700 dark:text-orange-400",
                       )}
                     >
                       Apt {r.apartment_name}
                       {r.suspect && (
-                        <TriangleAlert
-                          className="h-3.5 w-3.5"
-                          aria-label="Suspected fraud"
+                        <PirateIcon
+                          className="h-5 w-5"
+                          label="Suspected fraud"
+                        />
+                      )}
+                      {r.overheating !== null && (
+                        <ThermometerIcon
+                          className="h-5 w-5"
+                          label={`Overheating: ${formatPercent(r.overheating)} vs last month`}
                         />
                       )}
                       {!r.is_active && (

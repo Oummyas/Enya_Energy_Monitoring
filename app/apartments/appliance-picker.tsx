@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/form-message";
+import { ApplianceIcon } from "@/components/appliance-icon";
 import { APPLIANCES } from "@/lib/appliances";
 import { idleState, errorState, type FormState } from "@/lib/form-state";
 import { setAppliance } from "./actions";
@@ -49,7 +50,16 @@ export function AppliancePicker({
               disabled={pending}
               onCheckedChange={(v) => toggle(a.value, v === true)}
             />
-            <Label htmlFor={`appliance-${a.value}`}>{a.label}</Label>
+            <Label
+              htmlFor={`appliance-${a.value}`}
+              className="flex items-center gap-1.5"
+            >
+              <ApplianceIcon
+                appliance={a.value}
+                className="h-4 w-4 text-emerald-700 dark:text-emerald-400"
+              />
+              {a.label}
+            </Label>
           </div>
         ))}
       </div>

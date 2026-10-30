@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
-  Flame,
   Minus,
   Pause,
   Play,
   RotateCcw,
   Radio,
-  TriangleAlert,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PirateIcon } from "@/components/pirate-icon";
+import { ThermometerIcon } from "@/components/thermometer-icon";
 import {
   type DemoResult,
   demoFraud,
@@ -196,7 +196,7 @@ export function DemoPanel() {
           onClick={() => trigger(demoFraud)}
           className="border-red-500/40 text-red-700 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
         >
-          <TriangleAlert />
+          <PirateIcon />
           Fraud
         </Button>
         <Button
@@ -206,7 +206,7 @@ export function DemoPanel() {
           onClick={() => trigger(demoHeatingPeak)}
           className="border-orange-500/40 text-orange-700 hover:bg-orange-50 hover:text-orange-800 dark:text-orange-400 dark:hover:bg-orange-950/40"
         >
-          <Flame />
+          <ThermometerIcon />
           Heating peak
         </Button>
       </div>

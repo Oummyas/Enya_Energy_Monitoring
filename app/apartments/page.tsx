@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/form-message";
 import { DeleteButton } from "@/components/delete-button";
+import { ApplianceIcon } from "@/components/appliance-icon";
 import { applianceLabel } from "@/lib/appliances";
 import { formatDate } from "@/lib/format";
 import { errorState, successState } from "@/lib/form-state";
@@ -88,8 +89,9 @@ async function ApartmentList({
                   apt.apartment_appliances.map((a) => (
                     <span
                       key={a.appliance}
-                      className="rounded-full bg-emerald-600/10 px-2.5 py-0.5 text-xs text-emerald-800 dark:text-emerald-300"
+                      className="flex items-center gap-1 rounded-full bg-emerald-600/10 px-2.5 py-0.5 text-xs text-emerald-800 dark:text-emerald-300"
                     >
+                      <ApplianceIcon appliance={a.appliance} />
                       {applianceLabel(a.appliance)}
                     </span>
                   ))

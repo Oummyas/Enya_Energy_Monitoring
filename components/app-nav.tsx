@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AuthButton } from "@/components/auth-button";
 import { DemoPanel } from "@/components/demo-panel";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { FraudBanner } from "@/components/fraud-banner";
+import { AlertBanners } from "@/components/alert-banners";
 import { Logo, LogoWatermark } from "@/components/logo";
 import { NavLinks, NavLinksFallback } from "@/components/nav-links";
 
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <LogoWatermark className="pointer-events-none absolute -bottom-24 -right-24 h-[32rem] w-[32rem] opacity-[0.06] dark:opacity-[0.08]" />
       <AppNav />
       <Suspense>
-        <FraudBanner />
+        <AlertBanners />
       </Suspense>
       <div className="relative w-full max-w-5xl flex-1 flex flex-col gap-8 p-5">
         {children}
