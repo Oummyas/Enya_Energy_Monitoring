@@ -2,35 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartColumn, Gauge, House, type LucideIcon } from "lucide-react";
+import { PAGES } from "@/lib/pages";
 import { cn } from "@/lib/utils";
-
-const PAGES: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  // Tailwind gradient and shadow classes for the icon tile
-  color: string;
-}[] = [
-  {
-    href: "/apartments",
-    label: "Apartments",
-    icon: House,
-    color: "from-sky-500 to-blue-700 shadow-blue-700/30",
-  },
-  {
-    href: "/linky",
-    label: "Linky meters",
-    icon: Gauge,
-    color: "from-amber-400 to-orange-600 shadow-orange-600/30",
-  },
-  {
-    href: "/consumption",
-    label: "Consumption",
-    icon: ChartColumn,
-    color: "from-violet-500 to-purple-700 shadow-purple-700/30",
-  },
-];
 
 // Page links of the header; the current page is highlighted in green
 export function NavLinks() {

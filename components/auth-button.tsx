@@ -21,7 +21,6 @@ export async function AuthButton({
     return (
       <div className="flex items-center gap-3 rounded-md border bg-muted/70 py-1.5 pl-1.5 pr-1.5">
         <UserAvatar />
-        <span className="hidden max-w-56 truncate sm:inline">{user.email}</span>
         <LogoutButton className="h-8 bg-emerald-600 text-white hover:bg-emerald-500" />
       </div>
     );

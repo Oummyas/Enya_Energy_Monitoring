@@ -6,7 +6,13 @@ import { errorState } from "@/lib/form-state";
 import { LinkyForm, type ApartmentOption } from "../linky-form";
 import { createLinky } from "../actions";
 
-async function NewLinky() {
+async function NewLinky({
+  searchParams,
+}: {
+  searchParams: Promise<{ apartment?: string }>;
+}) {
+  // ?apartment=<id> preselects an apartment (from the home page To do list)
+  const { apartment } = await searchParams;
   const supabase = await createClient();
   // Only apartments that don't have a meter yet
   const { data, error } = await supabase
@@ -43,12 +49,21 @@ async function NewLinky() {
     <LinkyForm
       action={createLinky}
       apartments={available}
+      defaults={
+        available.some((a) => a.id === apartment)
+          ? { apartment_id: apartment }
+          : undefined
+      }
       submitLabel="Create Linky meter"
     />
   );
 }
 
-export default function NewLinkyPage() {
+export default function NewLinkyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ apartment?: string }>;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <Link href="/linky" className="text-sm hover:underline">
@@ -56,7 +71,7 @@ export default function NewLinkyPage() {
       </Link>
       <h1 className="font-bold text-2xl">New Linky meter</h1>
       <Suspense fallback={<p className="text-muted-foreground">Loading...</p>}>
-        <NewLinky />
+        <NewLinky searchParams={searchParams} />
       </Suspense>
     </div>
   );

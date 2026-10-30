@@ -5,11 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
-// Logged-in users go straight to their apartments
+// Logged-in users go straight to their home page
 async function HomeActions() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (data?.claims) redirect("/apartments");
+  if (data?.claims) redirect("/home");
 
   return (
     <div className="flex flex-col gap-3 w-full max-w-xs">

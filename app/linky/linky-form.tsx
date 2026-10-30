@@ -25,7 +25,7 @@ export function LinkyForm({
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   apartments: ApartmentOption[];
-  defaults?: LinkyValues;
+  defaults?: Partial<LinkyValues>;
   submitLabel: string;
   initialState?: FormState;
 }) {

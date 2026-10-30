@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // A strip under the header that the user can close for the rest of the
 // browser session. A new storageKey (e.g. a new count) shows it again.
 export function DismissibleBanner({
   storageKey,
   className,
+  contentClassName,
   children,
 }: {
   storageKey: string;
   className?: string;
+  // Overrides the default full-width layout of the inner row
+  contentClassName?: string;
   children: React.ReactNode;
 }) {
   const [dismissed, setDismissed] = useState(false);
@@ -37,7 +41,12 @@ export function DismissibleBanner({
 
   return (
     <div className={className}>
-      <div className="relative mx-auto flex w-full max-w-5xl items-center justify-center px-12 py-2.5 text-sm">
+      <div
+        className={cn(
+          "relative mx-auto flex w-full max-w-5xl items-center justify-center px-12 py-1.5 text-sm",
+          contentClassName,
+        )}
+      >
         {children}
         <button
           type="button"
