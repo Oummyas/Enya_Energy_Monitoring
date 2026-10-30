@@ -39,7 +39,7 @@ function NavLinksList({ pathname }: { pathname: string }) {
                   color,
                 )}
               >
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                <Icon className="h-5 w-5" />
               </span>
               {label}
               <span

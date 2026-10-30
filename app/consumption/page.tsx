@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { House } from "lucide-react";
+import { ApartmentIcon } from "@/components/apartment-icon";
 import { createClient } from "@/lib/supabase/server";
 import { FormMessage } from "@/components/form-message";
 import { PirateIcon } from "@/components/pirate-icon";
@@ -23,7 +23,6 @@ import {
   formatShortMonth,
   knownReadings,
   lastMonths,
-  monthlyAverage,
   simulateReadings,
 } from "@/lib/consumption";
 import { cn } from "@/lib/utils";
@@ -56,75 +55,112 @@ function Stat({
       <p className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">
         {value}
       </p>
-      {hint && (
-        <p className="truncate text-xs text-muted-foreground">{hint}</p>
-      )}
+      {hint && <p className="truncate text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
-function MonthlyChart({
-  months,
-  totals,
-}: {
-  months: string[];
-  totals: number[];
-}) {
-  const mean = average(totals);
-  const scale = Math.max(...totals, 1) * 1.15;
+type ChartRow = {
+  id: string;
+  apartment_name: string;
+  owner_name: string | null;
+  avg: number;
+  is_active: boolean;
+  suspect: boolean;
+  overheating: number | null;
+};
+
+// Bar colors: alerts stand out from the normal green
+const BAR_TONES = {
+  fraud: "bg-red-500",
+  overheating: "bg-orange-500",
+  normal: "bg-emerald-500",
+  inactive: "bg-zinc-300 dark:bg-zinc-600",
+};
+
+function barTone(r: ChartRow) {
+  if (!r.is_active) return "inactive";
+  if (r.suspect) return "fraud";
+  if (r.overheating !== null) return "overheating";
+  return "normal";
+}
+
+// Average monthly consumption of each apartment, biggest first, with the
+// apartments in alert in red (fraud) or orange (overheating)
+function ApartmentChart({ rows, mean }: { rows: ChartRow[]; mean: number }) {
+  const scale = Math.max(...rows.map((r) => r.avg), 1) * 1.05;
+  const legend = [
+    { tone: "fraud", label: "Suspected fraud" },
+    { tone: "overheating", label: "Overheating" },
+    { tone: "normal", label: "Normal" },
+    { tone: "inactive", label: "Not active" },
+  ] as const;
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h2 className="font-semibold">Total consumption per month</h2>
+          <h2 className="font-semibold">Average consumption per apartment</h2>
           <p className="text-xs text-muted-foreground">
-            {formatMonth(months[0])} – {formatMonth(months[months.length - 1])}
-            , in kWh
+            kWh per month over the last {HISTORY_MONTHS} months
           </p>
         </div>
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-block w-5 border-t-2 border-dashed border-foreground/50" />
-          Average: {formatKwh(mean)} kWh
-        </p>
+        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {legend.map(({ tone, label }) => (
+            <li key={tone} className="flex items-center gap-1.5">
+              <span className={cn("h-2.5 w-2.5 rounded-sm", BAR_TONES[tone])} />
+              {label}
+            </li>
+          ))}
+          <li className="flex items-center gap-1.5">
+            <span className="inline-block h-3 border-l-2 border-dashed border-foreground/50" />
+            Average {formatKwh(mean)} kWh
+          </li>
+        </ul>
       </div>
-      <div className="relative flex h-56 items-end gap-1.5 border-b border-foreground/15 sm:gap-3">
-        <div
+      <ul className="relative flex flex-col gap-1.5">
+        {/* Average of active apartments: label 9rem + gap, bar, gap + value 4.75rem */}
+        <li
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-foreground/50"
-          style={{ bottom: `${(mean / scale) * 100}%` }}
+          className="pointer-events-none absolute inset-y-0 z-10 border-l-2 border-dashed border-foreground/40"
+          style={{
+            left: `calc(9.75rem + (100% - 15.25rem) * ${mean / scale})`,
+          }}
         />
-        {totals.map((total, i) => (
-          <div
-            key={months[i]}
-            className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
-          >
-            <span className="text-[10px] font-medium tabular-nums sm:text-xs">
-              {formatKwh(total)}
-            </span>
-            <div
-              className={cn(
-                "w-full max-w-14 rounded-t-md bg-gradient-to-t transition-opacity group-hover:opacity-80",
-                total > mean
-                  ? "from-emerald-700 to-emerald-500"
-                  : "from-emerald-600 to-emerald-400",
-              )}
-              style={{ height: `${(total / scale) * 100}%` }}
-              title={`${formatMonth(months[i])}: ${formatKwh(total)} kWh · ${formatEuro(total * PRICE_PER_KWH_EUR)}`}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-1.5 sm:gap-3">
-        {months.map((m) => (
-          <p
-            key={m}
-            className="min-w-0 flex-1 text-center text-[10px] text-muted-foreground sm:text-xs"
-          >
-            {formatShortMonth(m)}
-          </p>
-        ))}
-      </div>
+        {rows.map((r) => {
+          const tone = barTone(r);
+          return (
+            <li key={r.id} className="flex items-center gap-3 text-sm">
+              <span
+                className={cn(
+                  "w-36 shrink-0 truncate",
+                  tone === "fraud" &&
+                    "font-semibold text-red-700 dark:text-red-400",
+                  tone === "overheating" &&
+                    "font-semibold text-orange-700 dark:text-orange-400",
+                  tone === "inactive" && "text-muted-foreground",
+                )}
+                title={r.owner_name ?? undefined}
+              >
+                Apt {r.apartment_name}
+              </span>
+              <span className="h-5 flex-1 rounded-md bg-muted/60">
+                <span
+                  className={cn(
+                    "block h-full rounded-md transition-all",
+                    BAR_TONES[tone],
+                  )}
+                  style={{ width: `${(r.avg / scale) * 100}%` }}
+                  title={`Apt ${r.apartment_name}: ${formatKwh(r.avg)} kWh / month`}
+                />
+              </span>
+              <span className="w-[4.75rem] shrink-0 text-right tabular-nums text-muted-foreground">
+                {formatKwh(r.avg)} kWh
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -134,10 +170,13 @@ function HeatCell({
   kwh,
   peak,
   month,
+  alert,
 }: {
   kwh: number | null;
   peak: number;
   month: string;
+  // Rows in alert are shaded red (fraud) or orange (overheating), not green
+  alert?: "fraud" | "overheating";
 }) {
   if (kwh === null) {
     return (
@@ -156,7 +195,9 @@ function HeatCell({
           "rounded-md py-1.5 text-center text-xs tabular-nums",
           ratio > 0.85 && "font-medium text-white",
         )}
-        style={{ backgroundColor: `rgb(5 150 105 / ${0.06 + ratio * 0.89})` }}
+        style={{
+          backgroundColor: `rgb(${alert === "fraud" ? "220 38 38" : alert === "overheating" ? "234 88 12" : "5 150 105"} / ${0.06 + ratio * 0.89})`,
+        }}
         title={`${formatMonth(month)}: ${formatKwh(kwh)} kWh · ${formatEuro(monthlyCost(kwh))}`}
       >
         {formatKwh(kwh)}
@@ -165,18 +206,23 @@ function HeatCell({
   );
 }
 
-function VsOthers({ value }: { value: number | null }) {
+// Gap to the average of active apartments: above (orange), below (blue),
+// or close to it (within 10%)
+function VsAverage({ value }: { value: number | null }) {
   if (value === null) return <span className="text-muted-foreground">—</span>;
+  const near = Math.abs(value) <= 10;
   return (
     <span
       className={cn(
-        "font-medium tabular-nums",
-        value > 10 && "text-red-700 dark:text-red-400",
-        value < -10 && "text-emerald-700 dark:text-emerald-400",
-        Math.abs(value) <= 10 && "text-muted-foreground",
+        "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+        near
+          ? "bg-muted text-muted-foreground"
+          : value > 0
+            ? "bg-orange-500/10 text-orange-700 dark:text-orange-400"
+            : "bg-sky-500/10 text-sky-700 dark:text-sky-400",
       )}
     >
-      {formatPercent(value)}
+      {near ? "≈ average" : `${value > 0 ? "▲" : "▼"} ${formatPercent(value)}`}
     </span>
   );
 }
@@ -189,7 +235,9 @@ async function ConsumptionReport() {
   const [metersResult, readingsResult] = await Promise.all([
     supabase
       .from("linky_meters")
-      .select("id, apartment_name, consumption, is_active, apartments(owner_name)")
+      .select(
+        "id, apartment_name, consumption, is_active, apartments(owner_name)",
+      )
       .order("created_at", { ascending: true })
       .returns<MeterRow[]>(),
     supabase
@@ -259,34 +307,23 @@ async function ConsumptionReport() {
     .map((m) => {
       const known = knownReadings(m.readings);
       const avg = average(known);
-      const others = active
-        .filter((o) => o.id !== m.id)
-        .map((o) => monthlyAverage(o.readings));
-      const othersAvg = average(others);
       return {
         ...m,
         avg,
         peak: Math.max(...known, 0),
         yearKwh: known.reduce((sum, r) => sum + r, 0),
         yearCost: known.reduce((sum, r) => sum + monthlyCost(r), 0),
-        vsOthers:
-          m.is_active && others.length && othersAvg > 0
-            ? ((avg - othersAvg) / othersAvg) * 100
-            : null,
         suspect: isSuspectedFraud(m),
         overheating: overheatingPercent(m, m.readings.at(-2)),
       };
     })
     // Active meters first, biggest consumers at the top
-    .sort(
-      (a, b) => Number(b.is_active) - Number(a.is_active) || b.avg - a.avg,
-    );
+    .sort((a, b) => Number(b.is_active) - Number(a.is_active) || b.avg - a.avg);
 
   const activeRows = rows.filter((r) => r.is_active);
   const totalCost = activeRows.reduce((sum, r) => sum + r.yearCost, 0);
   const perApartment = average(activeRows.map((r) => r.avg));
   const top = activeRows[0];
-  const maxAvg = Math.max(...rows.map((r) => r.avg), 1);
 
   return (
     <div className="flex flex-col gap-6">
@@ -313,14 +350,15 @@ async function ConsumptionReport() {
         />
       </div>
 
-      <MonthlyChart months={months} totals={totals} />
+      <ApartmentChart rows={rows} mean={perApartment} />
 
       <section className="flex flex-col gap-3 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-semibold">Comparison by apartment</h2>
           <p className="text-xs text-muted-foreground">
-            “vs others” compares an apartment with the average of the other
-            active ones.
+            “vs average” compares each apartment with the average of the active
+            apartments ({formatKwh(perApartment)} kWh / month), shown in the
+            last row.
           </p>
         </div>
         <div className="-mx-5 overflow-x-auto px-5">
@@ -342,8 +380,10 @@ async function ConsumptionReport() {
                 <th className="px-2 py-2 text-right font-medium">
                   Cost / month
                 </th>
-                <th className="px-2 py-2 text-right font-medium">Cost / year</th>
-                <th className="py-2 pl-2 text-right font-medium">vs others</th>
+                <th className="px-2 py-2 text-right font-medium">
+                  Cost / year
+                </th>
+                <th className="py-2 pl-2 text-right font-medium">vs average</th>
               </tr>
             </thead>
             <tbody>
@@ -353,9 +393,10 @@ async function ConsumptionReport() {
                   className={cn(
                     "border-b last:border-0",
                     !r.is_active && "text-muted-foreground opacity-70",
-                    r.suspect && "bg-red-50/80 dark:bg-red-950/30",
+                    r.suspect &&
+                      "[&>td]:border-y-2 [&>td]:border-red-500 [&>td:first-child]:border-l-2 [&>td:last-child]:border-r-2",
                     r.overheating !== null &&
-                      "bg-orange-50/80 dark:bg-orange-950/30",
+                      "[&>td]:border-y-2 [&>td]:border-orange-500 [&>td:first-child]:border-l-2 [&>td:last-child]:border-r-2",
                   )}
                 >
                   <td className="py-3 pr-3">
@@ -387,7 +428,7 @@ async function ConsumptionReport() {
                       )}
                     </p>
                     <p className="flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground">
-                      <House className="h-3 w-3 shrink-0" />
+                      <ApartmentIcon className="h-3.5 w-3.5" />
                       {r.owner_name ?? "—"}
                     </p>
                   </td>
@@ -397,30 +438,20 @@ async function ConsumptionReport() {
                       kwh={kwh}
                       peak={r.peak}
                       month={months[i]}
+                      alert={
+                        r.suspect
+                          ? "fraud"
+                          : r.overheating !== null
+                            ? "overheating"
+                            : undefined
+                      }
                     />
                   ))}
                   <td className="px-2 py-3 text-right font-medium tabular-nums">
                     {formatKwh(r.yearKwh)}
                   </td>
-                  <td className="px-2 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-2 w-20 rounded-full bg-muted">
-                        <div
-                          className={cn(
-                            "h-full rounded-full",
-                            r.is_active ? "bg-emerald-500" : "bg-zinc-400",
-                          )}
-                          style={{ width: `${(r.avg / maxAvg) * 100}%` }}
-                        />
-                        <div
-                          aria-hidden="true"
-                          className="absolute -top-1 h-4 w-0.5 bg-foreground/60"
-                          style={{ left: `${(perApartment / maxAvg) * 100}%` }}
-                          title="Average of active apartments"
-                        />
-                      </div>
-                      <span className="tabular-nums">{formatKwh(r.avg)}</span>
-                    </div>
+                  <td className="px-2 py-3 font-semibold tabular-nums">
+                    {formatKwh(r.avg)} kWh
                   </td>
                   <td className="px-2 py-3 text-right tabular-nums">
                     {formatEuro(monthlyCost(r.avg))}
@@ -429,11 +460,51 @@ async function ConsumptionReport() {
                     {formatEuro(r.yearCost)}
                   </td>
                   <td className="py-3 pl-2 text-right">
-                    <VsOthers value={r.vsOthers} />
+                    <VsAverage
+                      value={
+                        r.is_active && perApartment > 0
+                          ? ((r.avg - perApartment) / perApartment) * 100
+                          : null
+                      }
+                    />
                   </td>
                 </tr>
               ))}
             </tbody>
+            {/* Reference row: average of the active apartments */}
+            <tfoot>
+              <tr className="border-t-2 border-foreground/20 bg-muted/50 text-sm font-semibold">
+                <td className="py-3 pr-3">
+                  Average
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {active.length} active apartments
+                  </span>
+                </td>
+                {totals.map((t, i) => (
+                  <td
+                    key={months[i]}
+                    className="px-0.5 py-3 text-center text-xs tabular-nums"
+                  >
+                    {formatKwh(active.length ? t / active.length : 0)}
+                  </td>
+                ))}
+                <td className="px-2 py-3 text-right tabular-nums">
+                  {formatKwh(active.length ? totalKwh / active.length : 0)}
+                </td>
+                <td className="px-2 py-3 tabular-nums">
+                  {formatKwh(perApartment)} kWh
+                </td>
+                <td className="px-2 py-3 text-right tabular-nums">
+                  {formatEuro(monthlyCost(perApartment))}
+                </td>
+                <td className="px-2 py-3 text-right tabular-nums">
+                  {formatEuro(active.length ? totalCost / active.length : 0)}
+                </td>
+                <td className="py-3 pl-2 text-right text-xs font-normal text-muted-foreground">
+                  reference
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -441,8 +512,7 @@ async function ConsumptionReport() {
           that apartment&apos;s peak month. Cost at{" "}
           {formatEuro(PRICE_PER_KWH_EUR)}/kWh +{" "}
           {formatEuro(MONTHLY_SUBSCRIPTION_EUR)}/month subscription (EDF Tarif
-          Bleu, Base). The marker on each bar is the average of active
-          apartments.
+          Bleu, Base).
         </p>
       </section>
     </div>

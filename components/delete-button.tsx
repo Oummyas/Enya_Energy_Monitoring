@@ -23,9 +23,16 @@ export function DeleteButton({
       }}
       className="flex flex-col items-end gap-1"
     >
-      <Button type="submit" size="sm" variant="destructive" disabled={pending}>
-        <Trash2 />
-        {pending ? "Deleting..." : "Delete"}
+      <Button
+        type="submit"
+        size="icon"
+        variant="destructive"
+        disabled={pending}
+        aria-label={pending ? "Deleting" : "Delete"}
+        title="Delete"
+        className="h-8 w-8"
+      >
+        <Trash2 className={pending ? "animate-pulse" : undefined} />
       </Button>
       <FormMessage state={state} />
     </form>

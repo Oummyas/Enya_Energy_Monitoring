@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Gauge, House, Pencil, Plus } from "lucide-react";
-import { PirateIcon } from "@/components/pirate-icon";
-import { ThermometerIcon } from "@/components/thermometer-icon";
+import { Pencil, Plus } from "lucide-react";
+import { AlertMark } from "@/components/alert-mark";
+import { ApartmentIcon } from "@/components/apartment-icon";
+import { LinkyIcon } from "@/components/page-icons";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/form-message";
@@ -41,8 +42,8 @@ function Stat({
     <div
       className={cn(
         "rounded-2xl border bg-card/80 px-4 py-3 shadow-sm backdrop-blur",
-        danger && "border-red-500/40 bg-red-50/80 dark:bg-red-950/30",
-        warning && "border-orange-500/40 bg-orange-50/80 dark:bg-orange-950/30",
+        danger && "border-2 border-red-500",
+        warning && "border-2 border-orange-500",
       )}
     >
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -59,25 +60,56 @@ function Stat({
   );
 }
 
+// Card background shaped like a Linky meter: a box with rounded top
+// corners and a narrower terminal cover at the bottom. The outline is red
+// for a suspected fraud, orange for overheating.
+function MeterOutline({ alert }: { alert?: "fraud" | "overheating" }) {
+  const stroke =
+    alert === "fraud"
+      ? "stroke-red-500 [stroke-width:2.5]"
+      : alert === "overheating"
+        ? "stroke-orange-500 [stroke-width:2.5]"
+        : "stroke-border [stroke-width:1] group-hover:stroke-emerald-500/50";
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
+    >
+      <path
+        d="M7 1 H93 Q99 1 99 6 V78 L91 99 H9 L1 78 V6 Q1 1 7 1 Z"
+        vectorEffect="non-scaling-stroke"
+        strokeLinejoin="round"
+        className={cn("fill-card/90", stroke)}
+      />
+      {/* Line between the meter body and its terminal cover */}
+      <path
+        d="M1 78 H99"
+        vectorEffect="non-scaling-stroke"
+        className={cn("fill-none opacity-60", stroke)}
+      />
+    </svg>
+  );
+}
+
 function MeterIcon({
   tone,
 }: {
   tone: "active" | "inactive" | "suspect" | "overheating";
 }) {
   return (
+    // Same Linky icon as the menu and home page; the ring tells the state
     <span
       className={cn(
-        "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ring-1 ring-white/20 transition-transform duration-300 group-hover:scale-105",
-        tone === "active" &&
-          "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-700/30",
-        tone === "suspect" &&
-          "bg-gradient-to-br from-red-500 to-red-700 shadow-red-700/30",
-        tone === "overheating" &&
-          "bg-gradient-to-br from-amber-400 to-orange-600 shadow-orange-600/30",
-        tone === "inactive" && "bg-gradient-to-br from-zinc-400 to-zinc-600",
+        "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm transition-transform duration-300 group-hover:scale-105",
+        tone === "active" && "ring-1 ring-orange-600/20",
+        tone === "suspect" && "ring-2 ring-red-500",
+        tone === "overheating" && "ring-2 ring-orange-500",
+        tone === "inactive" && "opacity-60 ring-1 ring-zinc-400/40 grayscale",
       )}
     >
-      <Gauge className="h-6 w-6" strokeWidth={1.75} />
+      <LinkyIcon className="h-8 w-8" />
     </span>
   );
 }
@@ -92,7 +124,9 @@ async function LinkyList({
   const [{ data, error }, previous] = await Promise.all([
     supabase
       .from("linky_meters")
-      .select("id, apartment_name, consumption, is_active, apartments(owner_name)")
+      .select(
+        "id, apartment_name, consumption, is_active, apartments(owner_name)",
+      )
       .order("created_at", { ascending: true })
       .returns<LinkyRow[]>(),
     previousMonthReadings(supabase),
@@ -159,15 +193,17 @@ async function LinkyList({
             {meters.map((m) => (
               <li
                 key={m.id}
-                className={cn(
-                  "group flex flex-col gap-4 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
-                  m.suspect
-                    ? "border-red-500/50 bg-red-50/80 hover:shadow-red-700/10 dark:bg-red-950/30"
-                    : m.overheating !== null
-                      ? "border-orange-500/50 bg-orange-50/80 hover:shadow-orange-700/10 dark:bg-orange-950/30"
-                      : "hover:border-emerald-500/40 hover:shadow-emerald-700/10",
-                )}
+                className="group relative isolate flex flex-col gap-4 px-5 pb-4 pt-5 transition-transform duration-300 hover:-translate-y-1"
               >
+                <MeterOutline
+                  alert={
+                    m.suspect
+                      ? "fraud"
+                      : m.overheating !== null
+                        ? "overheating"
+                        : undefined
+                  }
+                />
                 <div className="flex items-start gap-3">
                   <MeterIcon
                     tone={
@@ -195,9 +231,20 @@ async function LinkyList({
                       Apartment {m.apartment_name}
                     </Link>
                     <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                      <House className="h-3.5 w-3.5 shrink-0" />
+                      <ApartmentIcon className="h-3.5 w-3.5" />
                       {m.apartments?.owner_name ?? "—"}
                     </p>
+                  </div>
+                  <div className="ml-auto">
+                    <AlertMark
+                      kind={
+                        m.suspect
+                          ? "fraud"
+                          : m.overheating !== null
+                            ? "overheating"
+                            : undefined
+                      }
+                    />
                   </div>
                 </div>
 
@@ -226,46 +273,34 @@ async function LinkyList({
                     >
                       {m.is_active ? "Active" : "Not active"}
                     </span>
-                    {m.suspect && (
-                      <span className="flex items-center gap-1 rounded-full bg-red-600 py-0.5 pl-0.5 pr-2.5 text-xs font-medium text-white">
-                        <span className="rounded-full bg-white p-px">
-                          <PirateIcon className="h-4 w-4" />
-                        </span>
-                        Suspected fraud
-                      </span>
-                    )}
-                    {m.overheating !== null && (
-                      <span className="flex items-center gap-1 rounded-full bg-orange-600 py-0.5 pl-0.5 pr-2.5 text-xs font-medium text-white">
-                        <span className="rounded-full bg-white p-px">
-                          <ThermometerIcon className="h-4 w-4" />
-                        </span>
-                        Overheating
-                      </span>
-                    )}
                   </div>
                 </div>
                 {m.suspect && (
-                  <p className="text-xs text-red-700 dark:text-red-400">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
                     Below {FRAUD_THRESHOLD_KWH} kWh while active.
                   </p>
                 )}
                 {m.overheating !== null && (
-                  <p className="text-xs text-orange-700 dark:text-orange-400">
+                  <p className="text-sm font-medium text-orange-700 dark:text-orange-400">
                     {formatPercent(m.overheating)} vs last month (limit +
                     {OVERHEATING_THRESHOLD_PERCENT}%).
                   </p>
                 )}
 
-                <div className="mt-auto flex items-start justify-between gap-2 border-t pt-4">
+                {/* Buttons sit in the lower cover of the meter, narrower */}
+                <div className="mt-auto flex items-start justify-between gap-2 px-4 pt-4">
                   <Button
                     asChild
-                    size="sm"
+                    size="icon"
                     variant="outline"
-                    className="hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400"
+                    className="h-8 w-8 hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400"
                   >
-                    <Link href={`/linky/${m.id}`}>
+                    <Link
+                      href={`/linky/${m.id}`}
+                      aria-label="Edit"
+                      title="Edit"
+                    >
                       <Pencil />
-                      Edit
                     </Link>
                   </Button>
                   <DeleteButton
@@ -291,9 +326,7 @@ export default function LinkyPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="font-bold text-3xl tracking-tight">
-            My Linky meters
-          </h1>
+          <h1 className="font-bold text-3xl tracking-tight">My Linky meters</h1>
           <p className="text-muted-foreground">
             Consumption per apartment. Suspected fraud is shown first.
           </p>

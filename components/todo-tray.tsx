@@ -2,13 +2,8 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronRight,
-  CircleCheck,
-  ClipboardList,
-  Gauge,
-  PowerOff,
-} from "lucide-react";
+import { ChevronRight, CircleCheck, ClipboardList } from "lucide-react";
+import { LinkyIcon } from "@/components/page-icons";
 import { SideDrawer } from "@/components/side-drawer";
 import type { Todo } from "@/lib/todos";
 import { cn } from "@/lib/utils";
@@ -56,7 +51,6 @@ export function TodoTray({ todos }: { todos: Todo[] }) {
         ) : (
           <ul className="flex-1 overflow-y-auto">
             {todos.map((t) => {
-              const Icon = t.kind === "no_meter" ? Gauge : PowerOff;
               return (
                 <li key={t.key} className="border-b">
                   <Link
@@ -66,13 +60,19 @@ export function TodoTray({ todos }: { todos: Todo[] }) {
                   >
                     <span
                       className={cn(
-                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ring-1",
                         t.kind === "no_meter"
-                          ? "bg-gradient-to-br from-amber-400 to-orange-600"
-                          : "bg-gradient-to-br from-zinc-400 to-zinc-600",
+                          ? "from-orange-50 to-orange-100 ring-orange-600/20"
+                          : "from-zinc-50 to-zinc-100 ring-zinc-400/40",
                       )}
                     >
-                      <Icon className="h-5 w-5" strokeWidth={1.75} />
+                      {/* Same Linky icon everywhere; greyed when inactive */}
+                      <LinkyIcon
+                        className={cn(
+                          "h-7 w-7",
+                          t.kind === "inactive_meter" && "opacity-60 grayscale",
+                        )}
+                      />
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-sm font-semibold">

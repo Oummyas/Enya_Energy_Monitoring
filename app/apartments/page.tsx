@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CalendarDays, House, Pencil, Plus } from "lucide-react";
+import { CalendarDays, Pencil, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/form-message";
 import { DeleteButton } from "@/components/delete-button";
+import { ApartmentIcon } from "@/components/apartment-icon";
 import { ApplianceIcon } from "@/components/appliance-icon";
+import { AlertMark } from "@/components/alert-mark";
 import { applianceLabel } from "@/lib/appliances";
 import { formatDate } from "@/lib/format";
+import { loadAlerts } from "@/lib/alerts";
+import { cn } from "@/lib/utils";
 import { errorState, successState } from "@/lib/form-state";
 import { deleteApartment } from "./actions";
 
@@ -19,10 +23,37 @@ type ApartmentRow = {
   apartment_appliances: { appliance: string }[];
 };
 
+// Card background shaped like a house (roof on top). The outline is red for
+// a suspected fraud, orange for overheating.
+function HouseOutline({ alert }: { alert?: "fraud" | "overheating" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
+    >
+      <path
+        d="M1 24 L50 1.5 L99 24 V96 Q99 99 96 99 H4 Q1 99 1 96 Z"
+        vectorEffect="non-scaling-stroke"
+        strokeLinejoin="round"
+        className={cn(
+          "fill-card/90",
+          alert === "fraud"
+            ? "stroke-red-500 [stroke-width:2.5]"
+            : alert === "overheating"
+              ? "stroke-orange-500 [stroke-width:2.5]"
+              : "stroke-border [stroke-width:1] group-hover:stroke-emerald-500/50",
+        )}
+      />
+    </svg>
+  );
+}
+
 function HouseIcon() {
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-sm shadow-emerald-700/30 ring-1 ring-white/20 transition-transform duration-300 group-hover:scale-105">
-      <House className="h-6 w-6" strokeWidth={1.75} />
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-sm shadow-emerald-700/20 ring-1 ring-emerald-600/20 transition-transform duration-300 group-hover:scale-105">
+      <ApartmentIcon className="h-8 w-8" />
     </span>
   );
 }
@@ -34,11 +65,26 @@ async function ApartmentList({
 }) {
   const { deleted } = await searchParams;
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("apartments")
-    .select("id, owner_name, entry_date, notes, apartment_appliances(appliance)")
-    .order("created_at", { ascending: true })
-    .returns<ApartmentRow[]>();
+  const [{ data, error }, alerts] = await Promise.all([
+    supabase
+      .from("apartments")
+      .select(
+        "id, owner_name, entry_date, notes, apartment_appliances(appliance)",
+      )
+      .order("created_at", { ascending: true })
+      .returns<ApartmentRow[]>(),
+    loadAlerts(supabase),
+  ]);
+  // Apartments whose meter is in alert get a colored outline
+  const alertByApartment = new Map(alerts.map((a) => [a.apartmentId, a.kind]));
+  // Suspected frauds first, then overheating, then the others (creation order)
+  const rank = (id: string) => {
+    const kind = alertByApartment.get(id);
+    return kind === "fraud" ? 0 : kind === "overheating" ? 1 : 2;
+  };
+  const apartments = data
+    ? [...data].sort((a, b) => rank(a.id) - rank(b.id))
+    : [];
 
   if (error) {
     return (
@@ -62,14 +108,16 @@ async function ApartmentList({
           </p>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((apt) => (
+        <ul className="grid gap-x-4 gap-y-8 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+          {apartments.map((apt) => (
             <li
               key={apt.id}
-              className="group flex flex-col gap-4 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-700/10"
+              className="group relative isolate flex flex-col gap-4 px-5 pb-5 pt-14 transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="flex items-start gap-3">
-                <HouseIcon />
+              <HouseOutline alert={alertByApartment.get(apt.id)} />
+              {/* The house icon sits in the roof */}
+              <ApartmentIcon className="absolute left-1/2 top-0 h-9 w-9 -translate-x-1/2 -translate-y-1/2 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                   <Link
                     href={`/apartments/${apt.id}`}
@@ -82,6 +130,7 @@ async function ApartmentList({
                     {formatDate(apt.entry_date) ?? "No entry date"}
                   </p>
                 </div>
+                <AlertMark kind={alertByApartment.get(apt.id)} />
               </div>
 
               <div className="flex flex-wrap gap-1.5">
@@ -111,13 +160,16 @@ async function ApartmentList({
               <div className="mt-auto flex items-start justify-between gap-2 border-t pt-4">
                 <Button
                   asChild
-                  size="sm"
+                  size="icon"
                   variant="outline"
-                  className="hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400"
+                  className="h-8 w-8 hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400"
                 >
-                  <Link href={`/apartments/${apt.id}`}>
+                  <Link
+                    href={`/apartments/${apt.id}`}
+                    aria-label="Edit"
+                    title="Edit"
+                  >
                     <Pencil />
-                    Edit
                   </Link>
                 </Button>
                 <DeleteButton

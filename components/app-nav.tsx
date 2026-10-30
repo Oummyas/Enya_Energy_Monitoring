@@ -9,7 +9,7 @@ import { NavLinks, NavLinksFallback } from "@/components/nav-links";
 import { cn } from "@/lib/utils";
 
 // `home`: the welcome page keeps only the account box; the brand, page links
-// and ACTIONS tray show on the pages it leads to
+// show on the pages it leads to
 export function AppNav({ home = false }: { home?: boolean }) {
   return (
     <nav className="relative z-10 w-full flex justify-center border-b border-b-foreground/10 bg-background/80 text-sm shadow-sm backdrop-blur">

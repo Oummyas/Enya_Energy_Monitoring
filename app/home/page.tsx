@@ -181,7 +181,7 @@ function PageCards({
                   color,
                 )}
               >
-                <Icon className="h-6 w-6" strokeWidth={1.75} />
+                <Icon className="h-8 w-8" />
               </span>
               <span className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-lg font-semibold">{label}</span>

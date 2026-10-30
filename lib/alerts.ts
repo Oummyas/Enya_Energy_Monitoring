@@ -4,6 +4,7 @@ import { overheatingPercent, previousMonthReadings } from "@/lib/overheating";
 
 export type Alert = {
   meterId: string;
+  apartmentId: string;
   apartmentName: string;
   ownerName: string | null;
   kind: "fraud" | "overheating";
@@ -14,6 +15,7 @@ export type Alert = {
 
 type MeterRow = {
   id: string;
+  apartment_id: string;
   apartment_name: string;
   consumption: number;
   is_active: boolean;
@@ -25,7 +27,9 @@ export async function loadAlerts(supabase: SupabaseClient): Promise<Alert[]> {
   const [{ data }, previous] = await Promise.all([
     supabase
       .from("linky_meters")
-      .select("id, apartment_name, consumption, is_active, apartments(owner_name)")
+      .select(
+        "id, apartment_id, apartment_name, consumption, is_active, apartments(owner_name)",
+      )
       .order("created_at", { ascending: true })
       .returns<MeterRow[]>(),
     previousMonthReadings(supabase),
@@ -34,6 +38,7 @@ export async function loadAlerts(supabase: SupabaseClient): Promise<Alert[]> {
   const alerts = (data ?? []).flatMap((m): Alert[] => {
     const base = {
       meterId: m.id,
+      apartmentId: m.apartment_id,
       apartmentName: m.apartment_name,
       ownerName: m.apartments?.owner_name ?? null,
       consumption: Number(m.consumption),
