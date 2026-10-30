@@ -26,27 +26,45 @@ type ApartmentRow = {
 // Card background shaped like a house (roof on top). The outline is red for
 // a suspected fraud, orange for overheating.
 function HouseOutline({ alert }: { alert?: "fraud" | "overheating" }) {
+  // The roof has a fixed height (2.5rem) so the card content always starts
+  // below it, whatever the card height
+  const stroke =
+    alert === "fraud"
+      ? "stroke-red-500 [stroke-width:2]"
+      : alert === "overheating"
+        ? "stroke-orange-500 [stroke-width:2]"
+        : "stroke-border [stroke-width:1] group-hover:stroke-emerald-500/50";
+  const border =
+    alert === "fraud"
+      ? "border-2 border-red-500"
+      : alert === "overheating"
+        ? "border-2 border-orange-500"
+        : "border group-hover:border-emerald-500/50";
   return (
-    <svg
+    <div
       aria-hidden="true"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
+      className="pointer-events-none absolute inset-0 -z-10 flex flex-col drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
     >
-      <path
-        d="M1 24 L50 1.5 L99 24 V96 Q99 99 96 99 H4 Q1 99 1 96 Z"
-        vectorEffect="non-scaling-stroke"
-        strokeLinejoin="round"
+      <svg
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+        className="h-10 w-full shrink-0"
+      >
+        <path d="M0.5 40.5 L50 1 L99.5 40.5 Z" className="fill-card" />
+        <path
+          d="M0.5 40.5 L50 1 L99.5 40.5"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+          className={cn("fill-none", stroke)}
+        />
+      </svg>
+      <div
         className={cn(
-          "fill-card/90",
-          alert === "fraud"
-            ? "stroke-red-500 [stroke-width:2.5]"
-            : alert === "overheating"
-              ? "stroke-orange-500 [stroke-width:2.5]"
-              : "stroke-border [stroke-width:1] group-hover:stroke-emerald-500/50",
+          "-mt-px flex-1 rounded-b-xl border-t-0 bg-card transition-colors",
+          border,
         )}
       />
-    </svg>
+    </div>
   );
 }
 
@@ -108,20 +126,20 @@ async function ApartmentList({
           </p>
         </div>
       ) : (
-        <ul className="grid gap-x-4 gap-y-8 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-x-3 gap-y-7 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {apartments.map((apt) => (
             <li
               key={apt.id}
-              className="group relative isolate flex flex-col gap-4 px-5 pb-5 pt-14 transition-transform duration-300 hover:-translate-y-1"
+              className="group relative isolate flex flex-col gap-3 px-4 pb-4 pt-12 transition-transform duration-300 hover:-translate-y-1"
             >
               <HouseOutline alert={alertByApartment.get(apt.id)} />
               {/* The house icon sits in the roof */}
-              <ApartmentIcon className="absolute left-1/2 top-0 h-9 w-9 -translate-x-1/2 -translate-y-1/2 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
+              <ApartmentIcon className="absolute left-1/2 top-0 h-8 w-8 -translate-x-1/2 -translate-y-1/2 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                   <Link
                     href={`/apartments/${apt.id}`}
-                    className="truncate font-semibold leading-tight hover:text-emerald-700 dark:hover:text-emerald-400"
+                    className="truncate text-sm font-semibold leading-tight hover:text-emerald-700 dark:hover:text-emerald-400"
                   >
                     {apt.owner_name}
                   </Link>
@@ -136,12 +154,18 @@ async function ApartmentList({
               <div className="flex flex-wrap gap-1.5">
                 {apt.apartment_appliances.length ? (
                   apt.apartment_appliances.map((a) => (
+                    // Icon only; the name shows on hover and to screen readers
                     <span
                       key={a.appliance}
-                      className="flex items-center gap-1 rounded-full bg-emerald-600/10 px-2.5 py-0.5 text-xs text-emerald-800 dark:text-emerald-300"
+                      title={applianceLabel(a.appliance)}
+                      aria-label={applianceLabel(a.appliance)}
+                      role="img"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-800 dark:text-emerald-300"
                     >
-                      <ApplianceIcon appliance={a.appliance} />
-                      {applianceLabel(a.appliance)}
+                      <ApplianceIcon
+                        appliance={a.appliance}
+                        className="h-4 w-4"
+                      />
                     </span>
                   ))
                 ) : (
@@ -152,7 +176,7 @@ async function ApartmentList({
               </div>
 
               {apt.notes && (
-                <p className="line-clamp-2 text-sm text-muted-foreground">
+                <p className="line-clamp-1 text-xs text-muted-foreground">
                   {apt.notes}
                 </p>
               )}

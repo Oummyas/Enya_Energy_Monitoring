@@ -2,8 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/logo";
 import { PAGES } from "@/lib/pages";
 import { cn } from "@/lib/utils";
+
+// "Home" comes first, with the Enya logo as its icon
+const NAV = [
+  {
+    href: "/home",
+    label: "Home",
+    icon: ({ className }: { className?: string }) => (
+      <Logo className={className} />
+    ),
+    color: "",
+  },
+  ...PAGES,
+];
 
 // Page links of the header; the current page is highlighted in green
 export function NavLinks() {
@@ -19,7 +33,7 @@ export function NavLinksFallback() {
 function NavLinksList({ pathname }: { pathname: string }) {
   return (
     <ul className="flex flex-wrap gap-x-7 gap-y-1">
-      {PAGES.map(({ href, label, icon: Icon, color }) => {
+      {NAV.map(({ href, label, icon: Icon, color }) => {
         const current = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <li key={href}>
@@ -39,7 +53,7 @@ function NavLinksList({ pathname }: { pathname: string }) {
                   color,
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={href === "/home" ? "h-6 w-6" : "h-5 w-5"} />
               </span>
               {label}
               <span

@@ -136,7 +136,10 @@ export default function HomePage() {
         </Suspense>
       </Part>
 
-      <footer className="mt-auto border-t border-foreground/10 pt-3">
+      <footer
+        id="contact"
+        className="mt-auto scroll-mt-4 border-t border-foreground/10 pt-3"
+      >
         <ContactSection />
       </footer>
     </div>

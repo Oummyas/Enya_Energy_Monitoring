@@ -19,9 +19,9 @@ export async function AuthButton({
 
   if (user && variant === "header") {
     return (
-      <div className="flex items-center gap-3 rounded-md border bg-muted/70 py-1.5 pl-1.5 pr-1.5">
-        <UserAvatar />
-        <LogoutButton className="h-8 bg-emerald-600 text-white hover:bg-emerald-500" />
+      <div className="flex items-center gap-3 rounded-xl border bg-muted/70 py-1.5 pl-1.5 pr-2 shadow-sm">
+        <UserAvatar className="h-11 w-11" />
+        <LogoutButton className="h-9 px-4 text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-500" />
       </div>
     );
   }

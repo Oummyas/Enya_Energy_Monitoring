@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { LifeBuoy } from "lucide-react";
+import { AskEnya } from "@/components/ask-enya";
 import { AuthButton } from "@/components/auth-button";
+import { Breadcrumb } from "@/components/breadcrumb";
 import { DemoPanel } from "@/components/demo-panel";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Alerts } from "@/components/alert-banners";
@@ -13,17 +16,15 @@ import { cn } from "@/lib/utils";
 export function AppNav({ home = false }: { home?: boolean }) {
   return (
     <nav className="relative z-10 w-full flex justify-center border-b border-b-foreground/10 bg-background/80 text-sm shadow-sm backdrop-blur">
-      <div className={cn("w-full px-5", home ? "max-w-6xl" : "max-w-5xl")}>
+      <div className="w-full max-w-6xl px-5">
         {/* Top level: brand and account */}
-        <div
-          className={cn(
-            "flex items-center gap-4 py-3",
-            home ? "justify-end" : "justify-between",
-          )}
-        >
+        {/* Brand, the Ask Enya assistant bar next to it (like a search bar),
+            then help and the account on the right */}
+        <div className="flex items-center gap-4 py-3">
           {!home && (
             <Link
               href="/home"
+              title="Back to home"
               className="flex items-center gap-3 text-lg font-bold tracking-tight"
             >
               <Logo className="h-11 w-11" />
@@ -35,6 +36,14 @@ export function AppNav({ home = false }: { home?: boolean }) {
               </span>
             </Link>
           )}
+          <AskEnya className="ml-4 w-full max-w-xs flex-1 sm:ml-8" />
+          <Link
+            href="/home#contact"
+            className="ml-auto hidden shrink-0 items-center gap-1.5 font-medium text-muted-foreground hover:text-emerald-700 md:flex dark:hover:text-emerald-400"
+          >
+            <LifeBuoy className="h-4 w-4" />
+            Help &amp; contact
+          </Link>
           <Suspense>
             <AuthButton variant="header" />
           </Suspense>
@@ -71,17 +80,21 @@ export function AppShell({
       <div
         className={cn(
           "relative w-full flex-1 flex flex-col gap-8 px-5",
-          home ? "max-w-6xl py-3" : "max-w-5xl py-4",
+          "max-w-6xl",
+          home ? "py-3" : "py-4",
         )}
       >
-        {/* Alert strip at the top of the content; the home page shows its
-            own, below the welcome */}
+        {/* Breadcrumb on the left and alert strips on the right; the home
+            page shows its own strips, below the welcome */}
         {!home && (
-          <Suspense>
-            <div className="-mb-4 flex flex-col">
+          <div className="-mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <Suspense>
+              <Breadcrumb />
+            </Suspense>
+            <Suspense>
               <Alerts />
-            </div>
-          </Suspense>
+            </Suspense>
+          </div>
         )}
         {children}
       </div>

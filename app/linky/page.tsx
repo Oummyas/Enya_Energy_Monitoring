@@ -64,32 +64,52 @@ function Stat({
 // corners and a narrower terminal cover at the bottom. The outline is red
 // for a suspected fraud, orange for overheating.
 function MeterOutline({ alert }: { alert?: "fraud" | "overheating" }) {
+  // The terminal cover has a fixed height (3rem) and holds the buttons, so
+  // they always sit inside it whatever the card height
   const stroke =
     alert === "fraud"
-      ? "stroke-red-500 [stroke-width:2.5]"
+      ? "stroke-red-500 [stroke-width:2]"
       : alert === "overheating"
-        ? "stroke-orange-500 [stroke-width:2.5]"
+        ? "stroke-orange-500 [stroke-width:2]"
         : "stroke-border [stroke-width:1] group-hover:stroke-emerald-500/50";
+  const border =
+    alert === "fraud"
+      ? "border-2 border-red-500"
+      : alert === "overheating"
+        ? "border-2 border-orange-500"
+        : "border group-hover:border-emerald-500/50";
   return (
-    <svg
+    <div
       aria-hidden="true"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
+      className="pointer-events-none absolute inset-0 -z-10 flex flex-col drop-shadow-sm transition-[filter] duration-300 group-hover:drop-shadow-lg"
     >
-      <path
-        d="M7 1 H93 Q99 1 99 6 V78 L91 99 H9 L1 78 V6 Q1 1 7 1 Z"
-        vectorEffect="non-scaling-stroke"
-        strokeLinejoin="round"
-        className={cn("fill-card/90", stroke)}
+      {/* Meter body */}
+      <div
+        className={cn(
+          "flex-1 rounded-t-2xl border-b-0 bg-card transition-colors",
+          border,
+        )}
       />
-      {/* Line between the meter body and its terminal cover */}
-      <path
-        d="M1 78 H99"
-        vectorEffect="non-scaling-stroke"
-        className={cn("fill-none opacity-60", stroke)}
-      />
-    </svg>
+      {/* Terminal cover, narrower at the bottom */}
+      <svg
+        viewBox="0 0 100 48"
+        preserveAspectRatio="none"
+        className="-mt-px h-12 w-full shrink-0"
+      >
+        <path d="M0.5 -0.5 L7 47.5 H93 L99.5 -0.5 Z" className="fill-card" />
+        <path
+          d="M0.5 -0.5 L7 47.5 H93 L99.5 -0.5"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+          className={cn("fill-none", stroke)}
+        />
+        <path
+          d="M0.5 0.5 H99.5"
+          vectorEffect="non-scaling-stroke"
+          className={cn("fill-none opacity-50", stroke)}
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -102,14 +122,14 @@ function MeterIcon({
     // Same Linky icon as the menu and home page; the ring tells the state
     <span
       className={cn(
-        "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm transition-transform duration-300 group-hover:scale-105",
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm transition-transform duration-300 group-hover:scale-105",
         tone === "active" && "ring-1 ring-orange-600/20",
         tone === "suspect" && "ring-2 ring-red-500",
         tone === "overheating" && "ring-2 ring-orange-500",
         tone === "inactive" && "opacity-60 ring-1 ring-zinc-400/40 grayscale",
       )}
     >
-      <LinkyIcon className="h-8 w-8" />
+      <LinkyIcon className="h-7 w-7" />
     </span>
   );
 }
@@ -189,11 +209,11 @@ async function LinkyList({
               warning={overheatingCount > 0}
             />
           </div>
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {meters.map((m) => (
               <li
                 key={m.id}
-                className="group relative isolate flex flex-col gap-4 px-5 pb-4 pt-5 transition-transform duration-300 hover:-translate-y-1"
+                className="group relative isolate flex flex-col gap-3 px-4 pb-2 pt-4 transition-transform duration-300 hover:-translate-y-1"
               >
                 <MeterOutline
                   alert={
@@ -228,7 +248,7 @@ async function LinkyList({
                             : "hover:text-emerald-700 dark:hover:text-emerald-400",
                       )}
                     >
-                      Apartment {m.apartment_name}
+                      Apt {m.apartment_name}
                     </Link>
                     <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
                       <ApartmentIcon className="h-3.5 w-3.5" />
@@ -251,7 +271,7 @@ async function LinkyList({
                 <div className="flex items-end justify-between gap-2">
                   <p
                     className={cn(
-                      "text-3xl font-semibold tracking-tight",
+                      "text-2xl font-semibold tracking-tight",
                       m.suspect && "text-red-700 dark:text-red-400",
                       m.overheating !== null &&
                         "text-orange-700 dark:text-orange-400",
@@ -288,7 +308,7 @@ async function LinkyList({
                 )}
 
                 {/* Buttons sit in the lower cover of the meter, narrower */}
-                <div className="mt-auto flex items-start justify-between gap-2 px-4 pt-4">
+                <div className="mt-auto flex items-start justify-between gap-2 px-4 pt-5">
                   <Button
                     asChild
                     size="icon"
