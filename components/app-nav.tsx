@@ -1,30 +1,40 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AuthButton } from "@/components/auth-button";
+import { DemoPanel } from "@/components/demo-panel";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { FraudBanner } from "@/components/fraud-banner";
 import { Logo, LogoWatermark } from "@/components/logo";
+import { NavLinks, NavLinksFallback } from "@/components/nav-links";
 
 export function AppNav() {
   return (
-    <nav className="relative z-10 w-full flex justify-center border-b border-b-foreground/10 h-16 bg-background/70 backdrop-blur">
-      <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-        <div className="flex gap-5 items-center">
+    <nav className="relative z-10 w-full flex justify-center border-b border-b-foreground/10 bg-background/80 text-sm shadow-sm backdrop-blur">
+      <div className="w-full max-w-5xl px-5">
+        {/* Top level: brand and account */}
+        <div className="flex items-center justify-between gap-4 py-4">
           <Link
             href="/apartments"
-            className="flex items-center gap-2 font-semibold"
+            className="flex items-center gap-3 text-lg font-bold tracking-tight"
           >
-            <Logo className="h-7 w-7" />
-            Enya Energy Monitoring
+            <Logo className="h-11 w-11" />
+            <span className="leading-tight">
+              Enya
+              <span className="block text-xs font-medium text-muted-foreground">
+                Energy Monitoring
+              </span>
+            </span>
           </Link>
-          <Link href="/apartments" className="hover:underline">
-            Apartments
-          </Link>
-          <Link href="/linky" className="hover:underline">
-            Linky meters
-          </Link>
+          <Suspense>
+            <AuthButton variant="header" />
+          </Suspense>
         </div>
-        <Suspense>
-          <AuthButton />
-        </Suspense>
+        {/* Second level: the app pages */}
+        <div className="border-t border-foreground/10">
+          <Suspense fallback={<NavLinksFallback />}>
+            <NavLinks />
+          </Suspense>
+        </div>
       </div>
     </nav>
   );
@@ -40,9 +50,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <LogoWatermark className="pointer-events-none absolute -bottom-24 -right-24 h-[32rem] w-[32rem] opacity-[0.06] dark:opacity-[0.08]" />
       <AppNav />
+      <Suspense>
+        <FraudBanner />
+      </Suspense>
       <div className="relative w-full max-w-5xl flex-1 flex flex-col gap-8 p-5">
         {children}
       </div>
+      <RealtimeRefresh />
+      <DemoPanel />
     </main>
   );
 }
