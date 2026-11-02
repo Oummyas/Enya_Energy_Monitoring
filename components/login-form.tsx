@@ -38,8 +38,10 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/home");
+      // Keep ?demo=on / ?demo=off from a page that redirected here, so the
+      // live demo panel still opens after logging in
+      const demo = new URLSearchParams(window.location.search).get("demo");
+      router.push(demo ? `/home?demo=${encodeURIComponent(demo)}` : "/home");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

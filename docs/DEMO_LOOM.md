@@ -5,10 +5,13 @@ Script de présentation du projet Enya pour la certification.
 ## Avant d'enregistrer
 
 - Ouvrir la **version en ligne sur Vercel** (pas `localhost`) : cela montre que l'app est déployée.
+- **En ligne, le panneau de démo est caché par défaut.** Pour l'afficher, ajouter `?demo=on` à la fin
+  de l'adresse, par exemple `https://…vercel.app/linky?demo=on`, puis cliquer sur la pastille
+  **« Live demo »** en bas à droite. (`?demo=off` le cache à nouveau.)
 - Cliquer sur **« Reset demo »** dans le panneau de démo pour repartir de données propres.
-- Préparer **deux fenêtres** sur la page Linky :
-  - une fenêtre **avec** le panneau de démo (le simulateur) ;
-  - une fenêtre **sans** le panneau (fermé avec la croix « Close in this window »).
+- Préparer **deux fenêtres**, connectées au même compte, sur la page Linky :
+  - une fenêtre **avec** le panneau de démo, ouverte avec `?demo=on` ;
+  - une fenêtre **sans** le panneau, ouverte avec l'adresse normale.
 - Fermer les notifications et zoomer le navigateur à 110–125 %.
 - Dans Loom, choisir **« Full screen » (plein écran)** et non « Window » : sinon la deuxième fenêtre n'apparaîtra pas à l'étape 6.
 
